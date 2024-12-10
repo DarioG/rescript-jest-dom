@@ -11,13 +11,14 @@ let mapMod = (f, x) =>
   | #Not(a) => #Not(f(a))
   }
 
-
 type rec assertion =
   | ToHaveTextContentString(modifier<(Dom.element, string, Options.TextContent.options)>): assertion
-  | ToHaveTextContentRegExp(modifier<(Dom.element, Js.Re.t, Options.TextContent.options)>): assertion
+  | ToHaveTextContentRegExp(
+      modifier<(Dom.element, Js.Re.t, Options.TextContent.options)>,
+    ): assertion
   | ToContainElement(modifier<(Dom.element, 'a)>): assertion
   | ToHaveClass(modifier<(Dom.element, 'b, Options.HaveClass.options)>): assertion
-  | ToBeChecked(modifier<(Dom.element)>): assertion
+  | ToBeChecked(modifier<Dom.element>): assertion
   | ToBeDisabled(modifier<Dom.element>): assertion
   | ToBeEnabled(modifier<Dom.element>): assertion
   | ToBeEmptyDOMElement(modifier<Dom.element>): assertion
@@ -31,17 +32,19 @@ type rec assertion =
   | ToHaveStyleString(modifier<(Dom.element, string)>): assertion
   | ToHaveStyleObject(modifier<(Dom.element, {..})>): assertion
   | ToHaveValue(modifier<(Dom.element, string)>): assertion
-
+  | ToContainHTML(modifier<(Dom.element, string)>): assertion
 
 module Internal = {
   @val external expect: 'a => {..} = "expect"
 
-  let affirm = (x) => {
-    let result:  Js.nullable<{..}> = switch x {
+  let affirm = x => {
+    let result: Js.nullable<{..}> = switch x {
     | ToHaveTextContentString(#Just(a, b, options)) => expect(a)["toHaveTextContent"](. b, options)
-    | ToHaveTextContentString(#Not(a, b, options)) => expect(a)["not"]["toHaveTextContent"](. b, options)
+    | ToHaveTextContentString(#Not(a, b, options)) =>
+      expect(a)["not"]["toHaveTextContent"](. b, options)
     | ToHaveTextContentRegExp(#Just(a, b, options)) => expect(a)["toHaveTextContent"](. b, options)
-    | ToHaveTextContentRegExp(#Not(a, b, options)) => expect(a)["not"]["toHaveTextContent"](. b, options)
+    | ToHaveTextContentRegExp(#Not(a, b, options)) =>
+      expect(a)["not"]["toHaveTextContent"](. b, options)
     | ToContainElement(#Just(a, b)) => expect(a)["toContainElement"](. b)
     | ToContainElement(#Not(a, b)) => expect(a)["not"]["toContainElement"](. b)
     | ToHaveClass(#Just(a, b, options)) => expect(a)["toHaveClass"](. b, options)
@@ -74,6 +77,8 @@ module Internal = {
     | ToHaveStyleObject(#Not(a, b)) => expect(a)["not"]["toHaveStyle"](b)
     | ToHaveValue(#Just(a, b)) => expect(a)["toHaveValue"](b)
     | ToHaveValue(#Not(a, b)) => expect(a)["not"]["toHaveValue"](b)
+    | ToContainHTML(#Just(a, b)) => expect(a)["toContainHTML"](b)
+    | ToContainHTML(#Not(a, b)) => expect(a)["not"]["toContainHTML"](b)
     }
     switch result->Js.Nullable.toOption {
     | Some(result) => Jest.fail(result["message"])
@@ -88,12 +93,16 @@ type partial<'a> = modifier<'a>
 
 let expect = a => #Just(a)
 
-let toHaveTextContentWithOptions = (expect, content, ~options) => switch content {
-  | #Str(string) => ToHaveTextContentString(mapMod(a => (a, string, options), expect))->Internal.affirm
-  | #RegExp(string) => ToHaveTextContentRegExp(mapMod(a => (a, string, options), expect))->Internal.affirm
-}
+let toHaveTextContentWithOptions = (expect, content, ~options) =>
+  switch content {
+  | #Str(string) =>
+    ToHaveTextContentString(mapMod(a => (a, string, options), expect))->Internal.affirm
+  | #RegExp(string) =>
+    ToHaveTextContentRegExp(mapMod(a => (a, string, options), expect))->Internal.affirm
+  }
 
-let toHaveTextContent = (expect, content) => toHaveTextContentWithOptions(expect, content, ~options=Options.TextContent.make())
+let toHaveTextContent = (expect, content) =>
+  toHaveTextContentWithOptions(expect, content, ~options=Options.TextContent.make())
 
 let toContainElement = (expect, element) => {
   ToContainElement(mapMod(a => (a, element), expect))->Internal.affirm
@@ -103,10 +112,15 @@ let toHaveValue = (expect, value) => {
   ToHaveValue(mapMod(a => (a, value), expect))->Internal.affirm
 }
 
+let toContainHTML = (expect, html) => {
+  ToContainHTML(mapMod(a => (a, html), expect))->Internal.affirm
+}
+
 let toHaveClassWithOptions = (expect, class, ~options) => {
   ToHaveClass(mapMod(a => (a, class, options), expect))->Internal.affirm
 }
-let toHaveClass = (expect, class) => toHaveClassWithOptions(expect, class, ~options=Options.HaveClass.make())
+let toHaveClass = (expect, class) =>
+  toHaveClassWithOptions(expect, class, ~options=Options.HaveClass.make())
 
 let toBeDisabled = expect => {
   ToBeDisabled(mapMod(a => a, expect))->Internal.affirm
@@ -144,14 +158,14 @@ let toHaveAttribute = (expect, attributeName, attributeValue) => {
   ToHaveAttribute(mapMod(a => (a, attributeName, attributeValue), expect))->Internal.affirm
 }
 
-let toHaveFocus = (expect) => {
+let toHaveFocus = expect => {
   ToHaveFocus(mapMod(a => a, expect))->Internal.affirm
 }
 
 let toHaveStyle = (expect, matchStyle) => {
   switch matchStyle {
-    | #Str(string) => ToHaveStyleString(mapMod(a => (a, string), expect))->Internal.affirm
-    | #Obj(obj) => ToHaveStyleObject(mapMod(a => (a, obj), expect))->Internal.affirm
+  | #Str(string) => ToHaveStyleString(mapMod(a => (a, string), expect))->Internal.affirm
+  | #Obj(obj) => ToHaveStyleObject(mapMod(a => (a, obj), expect))->Internal.affirm
   }
 }
 

@@ -8,9 +8,8 @@ type modifier<'a> = [
 
 module Internal: {
   @val external expect: 'a => {..} = "expect"
-  let affirm: (assertion) => Jest.assertion
+  let affirm: assertion => Jest.assertion
 }
-
 
 type plainPartial<'a> = [#Just('a)]
 type invertedPartial<'a> = [#Not('a)]
@@ -23,7 +22,7 @@ let expect: 'a => plainPartial<'a>
 let toHaveTextContentWithOptions: (
   [< partial<Dom.element>],
   @unwrap [< #Str(string) | #RegExp(Js.Re.t)],
-  ~options: Options.TextContent.options
+  ~options: Options.TextContent.options,
 ) => Jest.assertion
 
 let toHaveTextContent: (
@@ -31,24 +30,17 @@ let toHaveTextContent: (
   @unwrap [< #Str(string) | #RegExp(Js.Re.t)],
 ) => Jest.assertion
 
-let toContainElement: (
-  [< partial<Dom.element>],
-  'a,
-) => Jest.assertion
+let toContainElement: ([< partial<Dom.element>], 'a) => Jest.assertion
 
 let toHaveClassWithOptions: (
   [< partial<Dom.element>],
   string,
-  ~options: Options.HaveClass.options
+  ~options: Options.HaveClass.options,
 ) => Jest.assertion
-let toHaveClass: (
-  [< partial<Dom.element>],
-  string
-) => Jest.assertion
-let toHaveValue: (
-  [< partial<Dom.element>],
-  string
-) => Jest.assertion
+let toHaveClass: ([< partial<Dom.element>], string) => Jest.assertion
+let toHaveValue: ([< partial<Dom.element>], string) => Jest.assertion
+
+let toContainHTML: ([< partial<Dom.element>], string) => Jest.assertion
 
 let toBeDisabled: [< partial<Dom.element>] => Jest.assertion
 let toBeChecked: [< partial<Dom.element>] => Jest.assertion
@@ -59,14 +51,7 @@ let toBeValid: [< partial<Dom.element>] => Jest.assertion
 let toBeInvalid: [< partial<Dom.element>] => Jest.assertion
 let toBeRequired: [< partial<Dom.element>] => Jest.assertion
 let toBeVisible: [< partial<Dom.element>] => Jest.assertion
-let toHaveAttribute: (
-  [< partial<Dom.element>],
-  string,
-  string
-) => Jest.assertion
+let toHaveAttribute: ([< partial<Dom.element>], string, string) => Jest.assertion
 let toHaveFocus: [< partial<Dom.element>] => Jest.assertion
 
-let toHaveStyle: (
-  [< partial<Dom.element>], 
-  @unwrap [< #Str(string) | #Obj({..})]
-) => Jest.assertion
+let toHaveStyle: ([< partial<Dom.element>], @unwrap [< #Str(string) | #Obj({..})]) => Jest.assertion
